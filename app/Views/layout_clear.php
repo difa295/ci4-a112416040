@@ -11,7 +11,7 @@ if(uri_string()!=""){
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-   <title>- TokoSaya - <?php echo $hlm ?></title>
+  <title>- Toko - <?php echo $hlm ?></title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -20,8 +20,8 @@ if(uri_string()!=""){
   <link href="<?= base_url()?>NiceAdmin/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->
-  <link href="https://fonts.gstatic.com" rel="preconnect">  
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
 
   <!-- Vendor CSS Files -->
   <link href="<?= base_url()?>NiceAdmin/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -34,51 +34,22 @@ if(uri_string()!=""){
 
   <!-- Template Main CSS File -->
   <link href="<?= base_url()?>NiceAdmin/assets/css/style.css" rel="stylesheet">
-
+                                                                                  
+  <!-- =======================================================
+  * Template Name: NiceAdmin
+  * Updated: Mar 09 2023 with Bootstrap v5.2.3
+  * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
 </head>
 
-<body>
-
- <?= $this->include('components/header') ?>
-
-  <?= $this->include('components/sidebar') ?>
-
-  <main id="main" class="main">
-
-    <div class="pagetitle">
-      <h1>Data Tables</h1>
-      <nav>
-<ol class="breadcrumb">
-  <li class="breadcrumb-item">Home</li>
-  <?php
-	if($hlm!="Home"){
-	  ?>
-	  <li class="breadcrumb-item"><?php echo $hlm?></li> 
-	  <?php
-	}
-  ?> 
-</ol>
-      </nav>
-    </div><!-- End Page Title -->
-
-    <section class="section">
-      <div class="row">
-        <div class="col-lg-12">
-
-          <div class="card">
-          <div class="card-body">
-            <h5 class="card-title"><?php echo $hlm?></h5>
-            <?= $this->renderSection('content') ?>
-          </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-  </main><!-- End #main -->
-
-  <?= $this->include('components/footer') ?>
+<body> 
+	<main>
+	
+	  <?= $this->renderSection('content') ?> 
+	  
+	</main><!-- End #main -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
