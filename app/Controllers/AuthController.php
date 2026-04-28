@@ -18,7 +18,7 @@ class AuthController extends BaseController
             $password = $this->request->getVar('password');
 
             $dataUser = [
-                'username' => 'april',
+                'username' => 'Difa',
                 'password' => '202cb962ac59075b964b07152d234b70', // 123
                 'role' => 'admin'
             ];
@@ -29,6 +29,8 @@ class AuthController extends BaseController
                     session()->set([
                         'username' => $dataUser['username'],
                         'role' => $dataUser['role'],
+                        'email' => '111202416040@mhs.dinus.ac.id', // ✔ sudah benar
+                        'login_time' => date('Y-m-d H:i:s'),
                         'isLoggedIn' => TRUE
                     ]);
 
