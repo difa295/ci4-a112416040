@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
  *
  * Extend this class in any new controllers:
  * ```
- *     class Home extends BaseController
+ * class Home extends BaseController
  * ```
  *
  * For security, be sure to declare any new methods as protected or private.
@@ -34,7 +34,7 @@ abstract class BaseController extends Controller
     {
         // Load here all helpers you want to be available in your controllers that extend BaseController.
         // Caution: Do not put the this below the parent::initController() call below.
-        // $this->helpers = ['form', 'url'];
+        $this->helpers = ['form'];
 
         // Caution: Do not edit this line.
         parent::initController($request, $response, $logger);
