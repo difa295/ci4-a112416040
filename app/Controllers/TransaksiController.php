@@ -7,11 +7,13 @@ use CodeIgniter\HTTP\ResponseInterface;
 use App\Services\RajaOngkirService;
 use App\Models\TransactionModel;
 use App\Models\TransactionDetailModel;
+
 class TransaksiController extends BaseController
 {
     protected $cart;
     protected $transactionModel;
     protected $transactionDetailModel;
+
     public function __construct()
     {
         helper(['number', 'form']);
@@ -22,7 +24,6 @@ class TransaksiController extends BaseController
 
     public function index()
     {  
-        // SINKRON 100%: Menambahkan variabel total harga bawaan modul dosen
         $data = [
             'items' => $this->cart->contents(),
             'total' => $this->cart->total()
@@ -84,7 +85,6 @@ class TransaksiController extends BaseController
         return redirect()->to(base_url('keranjang'));
     }
 
-    // SINKRON 100%: Fungsi cart_clear sesuai screenshot modul dosen kamu
     public function cart_clear()
     {
         $this->cart->destroy();
@@ -131,9 +131,6 @@ class TransaksiController extends BaseController
         ]);
     }
 
-    // =========================================================
-    // TAMBAHAN FUNGSI DARI DOSEN (DILETAKKAN DI PALING BAWAH)
-    // =========================================================
     public function costs()
     {
         $origin = '64999';
@@ -157,62 +154,97 @@ class TransaksiController extends BaseController
         }
 
         return $this->response->setJSON($results);
-  
+    }
+
+    public function buy()
+    { 
+        $cartItems = $this->cart->contents();
+
+        if (empty($cartItems)) {
+            return redirect()->back();
         }
 
-public function buy()
-{ 
-    $cartItems = $this->cart->contents();
+        $db = \Config\Database::connect();
+        $db->transStart(); 
 
-    if (empty($cartItems)) {
-        return redirect()->back();
+        $subtotal = 0;
+        foreach ($cartItems as $item) {
+            $subtotal += $item['qty'] * $item['price'];
+        }
+
+        $ongkir = (int) $this->request->getPost('ongkir');
+
+        $transaction = [
+            'username'    => $this->request->getPost('username'),
+            'alamat'      => $this->request->getPost('alamat'),
+            'ongkir'      => $ongkir,
+            'total_harga' => $subtotal + $ongkir,
+            'status'      => 0, 
+        ];
+
+        if (!$this->transactionModel->insert($transaction)) {
+            $db->transRollback();
+            return redirect()->back()->with('error', 'Gagal membuat transaksi');
+        }
+
+        $transactionId = $this->transactionModel->getInsertID();
+
+        foreach ($cartItems as $item) {
+            $this->transactionDetailModel->insert([
+                'transaction_id' => $transactionId,
+                'product_id'     => $item['id'],
+                'jumlah'         => $item['qty'],
+                'diskon'         => 0,
+                'subtotal_harga' => $item['qty'] * $item['price'] 
+            ]);
+        }
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            return redirect()->back()->with('error', 'Gagal membuat transaksi');
+        }
+
+        $this->cart->destroy();
+        return redirect()->to(base_url());
     }
 
-    $db = \Config\Database::connect();
-    $db->transStart(); 
+    /**
+     * FUNGSI BARU SESUAI INSTRUKSI DOSEN
+     * Menampilkan riwayat transaksi milik user yang sedang login
+     */
+  public function history()
+{
+    // 1. Ambil variable username dari session yang tersimpan
+    $username = session()->get('username');
 
-    $subtotal = 0;
-    foreach ($cartItems as $item) {
-        $subtotal += $item['qty'] * $item['price'];
+    // Jika user belum login, tendang balik ke halaman login atau home
+    if (!$username) {
+        return redirect()->to(base_url('login'))->with('error', 'Silakan login terlebih dahulu');
     }
 
-    $ongkir = (int) $this->request->getPost('ongkir');
+    // 2. Ambil semua data transaksi berdasarkan username dari transactionModel
+    $transaksi = $this->transactionModel->where('username', $username)->findAll();
 
-    $transaction = [
-        'username'    => $this->request->getPost('username'),
-        'alamat'      => $this->request->getPost('alamat'),
-        'ongkir'      => $ongkir,
-        'total_harga' => $subtotal + $ongkir,
-        'status'      => 0, 
+    // 3. Tampung semua id transaksinya pada sebuah variable array
+    $transactionIds = [];
+    foreach ($transaksi as $t) {
+        $transactionIds[] = $t['id']; 
+    }
+
+    // 4. Ambil semua data detail transaksi melalui fungsi model (jika ada transaksi)
+    $detailTransaksi = [];
+    if (!empty($transactionIds)) {
+        $detailTransaksi = $this->transactionDetailModel->getProductsByTransactionIds($transactionIds);
+    }
+
+    // 5. SINKRONISASI 100%: Mengubah key array agar pas dengan variabel di v_history.php
+    $data = [
+        'username'     => $username,
+        'transactions' => $transaksi,       // Mengikuti nama di view ($transactions)
+        'products'     => $detailTransaksi  // Mengikuti nama di view ($products)
     ];
 
-    // insert transaction
-    if (!$this->transactionModel->insert($transaction)) {
-        $db->transRollback();
-        return redirect()->back()->with('error', 'Gagal membuat transaksi');
-    }
-
-    $transactionId = $this->transactionModel->getInsertID();
-
-    // insert transaction detail
-    foreach ($cartItems as $item) {
-        $this->transactionDetailModel->insert([
-            'transaction_id' => $transactionId,
-            'product_id'     => $item['id'],
-            'jumlah'         => $item['qty'],
-            'diskon'         => 0,
-            'subtotal_harga' => $item['qty'] * $item['price'] 
-        ]);
-    }
-
-    $db->transComplete();
-
-    if (!$db->transStatus()) {
-        return redirect()->back()->with('error', 'Gagal membuat transaksi');
-    }
-
-		//hapus session keranjang belanja 
-    $this->cart->destroy();
-    return redirect()->to(base_url());
+    return view('v_history', $data);
 }
-        }
+}
