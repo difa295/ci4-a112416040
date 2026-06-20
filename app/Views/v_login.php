@@ -6,16 +6,16 @@ $username = [
     'name'      => 'username',
     'id'        => 'username',
     'class'     => 'form-control',
-   // 'required'  => true, // Wajib diisi (Validasi Klien)
-   // 'minlength' => 6     // Minimal 6 karakter (Validasi Klien)
+    'required'  => true, 
+    'minlength' => 6     
 ];
 
 $password = [
     'name'      => 'password',
     'id'        => 'password',
     'class'     => 'form-control',
-   // 'required'  => true, // Wajib diisi (Validasi Klien)
-   // 'minlength' => 7     // Minimal 7 karakter (Validasi Klien)
+    'required'  => true, // Wajib diisi (Validasi Klien)
+    'minlength' => 7     // Minimal 7 karakter (Validasi Klien)
 ];
 ?>
 <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">

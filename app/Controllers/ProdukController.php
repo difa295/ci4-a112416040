@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\ProductModel;
+use Dompdf\Dompdf;
 
 class ProdukController extends BaseController
 {
@@ -72,6 +73,36 @@ class ProdukController extends BaseController
 
         return redirect('produk')->with('success', 'Data Berhasil Diubah');
     }
+    public function download()
+{
+    // Ambil data produk dari database
+    $products = $this->productModel->findAll();
+
+    // Render view menjadi HTML
+    $html = view('produk/download_pdf', [
+        'products' => $products
+    ]);
+
+    // Nama file PDF
+    $filename = date('Y-m-d-H-i-s') . '-produk.pdf';
+
+    // Inisialisasi Dompdf
+    $dompdf = new Dompdf();
+
+    // Load HTML ke Dompdf
+    $dompdf->loadHtml($html);
+
+    // Setting ukuran kertas dan orientasi
+    $dompdf->setPaper('A4', 'portrait');
+
+    // Generate PDF
+    $dompdf->render();
+
+    // Download / tampilkan PDF
+    $dompdf->stream($filename, [
+        'Attachment' => true
+    ]);
+}
 
     public function delete($id)
     {
