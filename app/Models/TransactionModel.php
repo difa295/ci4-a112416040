@@ -12,7 +12,19 @@ class TransactionModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = true; //disesuaikan
     protected $protectFields    = true;
-    protected $allowedFields    = ['username', 'total_harga', 'alamat', 'ongkir', 'status']; //disesuaikan
+    
+    // MODIFIKASI UAS: Mendaftarkan field baru agar diizinkan masuk ke database
+    protected $allowedFields    = [
+        'username', 
+        'total_harga', 
+        'alamat', 
+        'ongkir', 
+        'status',
+        'ppn',
+        'biaya_admin',
+        'voucher_code',
+        'diskon_voucher'
+    ]; 
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

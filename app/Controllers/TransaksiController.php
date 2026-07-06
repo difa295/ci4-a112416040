@@ -16,7 +16,8 @@ class TransaksiController extends BaseController
 
     public function __construct()
     {
-        helper(['number', 'form']);
+        // MODIFIKASI UAS: Memuat 'transaksi' helper yang telah dibuat di langkah 2
+        helper(['number', 'form', 'transaksi']);
         $this->cart = service('cart');
         $this->transactionModel = new TransactionModel();
         $this->transactionDetailModel = new TransactionDetailModel(); 
@@ -158,15 +159,21 @@ class TransaksiController extends BaseController
 
     public function buy()
     { 
+        // PANGGIL HELPER DI SINI AGAR TIDAK UNDEFINED FUNCTION
+        helper(['transaksi']);
+
         $cartItems = $this->cart->contents();
 
         if (empty($cartItems)) {
             return redirect()->back();
         }
+        
+        // ... sisa kode ke bawah tetap sama ...
 
         $db = \Config\Database::connect();
         $db->transStart(); 
 
+        // Total harga dihitung dari perkalian qty * price tiap item (sebelum pajak & admin)
         $subtotal = 0;
         foreach ($cartItems as $item) {
             $subtotal += $item['qty'] * $item['price'];
@@ -174,12 +181,30 @@ class TransaksiController extends BaseController
 
         $ongkir = (int) $this->request->getPost('ongkir');
 
+        // --- MODIFIKASI PERHITUNGAN BARU UAS ---
+        // 1. Mengambil input kode voucher dari form checkout
+        $voucher_code = $this->request->getPost('voucher_code');
+
+        // 2. Kalkulasi komponen menggunakan fungsi dari TransaksiHelper
+        $diskon_voucher = hitung_diskon_voucher($subtotal, $voucher_code);
+        $ppn            = hitung_ppn($subtotal);
+        $biaya_admin    = hitung_biaya_admin($subtotal);
+
+        // 3. Menghitung Grand Total sesuai rumus lembar soal:
+        // Grand Total = Subtotal - Diskon Voucher + PPN + Biaya Admin + Ongkir
+        $grand_total = $subtotal - $diskon_voucher + $ppn + $biaya_admin + $ongkir;
+
         $transaction = [
-            'username'    => $this->request->getPost('username'),
-            'alamat'      => $this->request->getPost('alamat'),
-            'ongkir'      => $ongkir,
-            'total_harga' => $subtotal + $ongkir,
-            'status'      => 0, 
+            'username'       => $this->request->getPost('username'),
+            'alamat'         => $this->request->getPost('alamat'),
+            'ongkir'         => $ongkir,
+            'status'         => 0, 
+            // --- UPDATE FIELD BARU DI DATABASE ---
+            'total_harga'    => $grand_total, // grand total akhir
+            'ppn'            => $ppn,
+            'biaya_admin'    => $biaya_admin,
+            'voucher_code'   => !empty($voucher_code) ? strtoupper(trim($voucher_code)) : null,
+            'diskon_voucher' => $diskon_voucher,
         ];
 
         if (!$this->transactionModel->insert($transaction)) {
@@ -209,42 +234,32 @@ class TransaksiController extends BaseController
         return redirect()->to(base_url());
     }
 
-    /**
-     * FUNGSI BARU SESUAI INSTRUKSI DOSEN
-     * Menampilkan riwayat transaksi milik user yang sedang login
-     */
-  public function history()
-{
-    // 1. Ambil variable username dari session yang tersimpan
-    $username = session()->get('username');
+    public function history()
+    {
+        $username = session()->get('username');
 
-    // Jika user belum login, tendang balik ke halaman login atau home
-    if (!$username) {
-        return redirect()->to(base_url('login'))->with('error', 'Silakan login terlebih dahulu');
+        if (!$username) {
+            return redirect()->to(base_url('login'))->with('error', 'Silakan login terlebih dahulu');
+        }
+
+        $transaksi = $this->transactionModel->where('username', $username)->findAll();
+
+        $transactionIds = [];
+        foreach ($transaksi as $t) {
+            $transactionIds[] = $t['id']; 
+        }
+
+        $detailTransaksi = [];
+        if (!empty($transactionIds)) {
+            $detailTransaksi = $this->transactionDetailModel->getProductsByTransactionIds($transactionIds);
+        }
+
+        $data = [
+            'username'     => $username,
+            'transactions' => $transaksi,
+            'products'     => $detailTransaksi
+        ];
+
+        return view('v_history', $data);
     }
-
-    // 2. Ambil semua data transaksi berdasarkan username dari transactionModel
-    $transaksi = $this->transactionModel->where('username', $username)->findAll();
-
-    // 3. Tampung semua id transaksinya pada sebuah variable array
-    $transactionIds = [];
-    foreach ($transaksi as $t) {
-        $transactionIds[] = $t['id']; 
-    }
-
-    // 4. Ambil semua data detail transaksi melalui fungsi model (jika ada transaksi)
-    $detailTransaksi = [];
-    if (!empty($transactionIds)) {
-        $detailTransaksi = $this->transactionDetailModel->getProductsByTransactionIds($transactionIds);
-    }
-
-    // 5. SINKRONISASI 100%: Mengubah key array agar pas dengan variabel di v_history.php
-    $data = [
-        'username'     => $username,
-        'transactions' => $transaksi,       // Mengikuti nama di view ($transactions)
-        'products'     => $detailTransaksi  // Mengikuti nama di view ($products)
-    ];
-
-    return view('v_history', $data);
-}
 }

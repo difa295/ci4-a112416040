@@ -24,7 +24,7 @@ History Transaksi Pembelian <strong><?= $username ?></strong>
                         <th scope="row"><?= $index + 1 ?></th>
                         <td><?= $item['id'] ?></td>
                         <td><?= $item['created_at'] ?></td>
-                        <td><?= number_to_currency($item['total_harga'], 'IDR') ?></td>
+                        <td><?= number_to_currency($item['total_harga'] ?? 0, 'IDR') ?></td>
                         <td><?= $item['alamat'] ?></td>
                         <td>
                             <?= ($item['status'] == "1")
@@ -69,14 +69,45 @@ History Transaksi Pembelian <strong><?= $username ?></strong>
                                 <?php endif; ?>
 
                                 <strong><?= $item2['nama'] ?></strong>
-                                <?= number_to_currency($item2['harga'], 'IDR') ?>
+                                <?= number_to_currency($item2['harga'] ?? 0, 'IDR') ?>
                                 <br>
                                 <?= "(" . $item2['jumlah'] . " pcs)" ?><br>
-                                <?= number_to_currency($item2['subtotal_harga'], 'IDR') ?>
+                                <?= number_to_currency($item2['subtotal_harga'] ?? 0, 'IDR') ?>
                                 <hr>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        Ongkir <?= number_to_currency($item['ongkir'], 'IDR') ?>
+                        
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Ongkir:</span>
+                                <span><?= number_to_currency($item['ongkir'] ?? 0, 'IDR') ?></span>
+                            </div>
+
+                            <?php if (!empty($item['diskon_voucher']) && $item['diskon_voucher'] > 0) : ?>
+                                <div class="d-flex justify-content-between mb-1 text-danger">
+                                    <span>Diskon Voucher (<?= $item['voucher_code'] ?>):</span>
+                                    <span>-<?= number_to_currency($item['diskon_voucher'], 'IDR') ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>PPN (11%):</span>
+                                <span><?= number_to_currency($item['ppn'] ?? 0, 'IDR') ?></span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Biaya Admin:</span>
+                                <span><?= number_to_currency($item['biaya_admin'] ?? 0, 'IDR') ?></span>
+                            </div>
+                            
+                            <hr class="my-2">
+                            
+                            <div class="d-flex justify-content-between fw-bold text-success fs-5">
+                                <span>Total Bayar:</span>
+                                <span><?= number_to_currency($item['total_harga'] ?? 0, 'IDR') ?></span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
